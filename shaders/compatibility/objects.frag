@@ -1,10 +1,10 @@
 #version 120
 
-#pragma import_defines(FORCE_OPAQUE, DISTORTION)
-
 #if @useGPUShader4
     #extension GL_EXT_gpu_shader4: require
 #endif
+
+#pragma import_defines(FORCE_OPAQUE, DISTORTION)
 
 #if @diffuseMap
 uniform sampler2D diffuseMap;

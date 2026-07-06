@@ -206,9 +206,9 @@ vec3 fresnelSchlick(float incidence, vec3 f0, vec3 f90)
 float distGGX(float halfIncidence, float r)
 {
     float r2 = r*r;
-    
+
     float d = halfIncidence*halfIncidence * (r2 - 1.0) + 1.0;
-    
+
     return r2 / (d * d * PI);
 }
 float distGGXApprox(float halfIncidence, float r)
@@ -252,10 +252,10 @@ float geoSmithGLTF(vec3 normalDir, vec3 viewDir, vec3 lightDir, vec3 halfDir, fl
     float viewIncidence  = (dot(normalDir,  viewDir));
     float halfLight      = (dot(lightDir ,  halfDir));
     float halfView       = (dot(viewDir  ,  halfDir));
-    
+
     float a = halfLight > 0.0 ? geoSmithGLTFDenom(lightInsolation, roughness) : 0.0;
     float b = halfView > 0.0 ? geoSmithGLTFDenom(viewIncidence, roughness) : 0.0;
-    
+
     return (a * b) / (4.0 * abs(lightInsolation) * abs(viewIncidence) + 0.00001);
 }
 
@@ -272,12 +272,12 @@ float BRDF(vec3 normalDir, vec3 viewDir, vec3 lightDir, vec3 halfDir, float roug
     float lightInsolation = max(dot(normalDir, lightDir), 0.0);
     if (lightInsolation <= 0.0)
         return 0.0;
-    
+
     float halfIncidence  = max(dot(normalDir,  halfDir), 0.0);
     float viewIncidence  = max(dot(normalDir,  viewDir), 0.0);
     float halfLight      = max(dot(lightDir ,  halfDir), 0.0);
     float halfView       = max(dot(viewDir  ,  halfDir), 0.0);
-    
+
 #if PBR_SHITTYBRDF
     float NDF = distGGXApprox(halfIncidence, roughness);
     float geo = geoGGX(lightInsolation, viewIncidence, roughness);
@@ -286,7 +286,7 @@ float BRDF(vec3 normalDir, vec3 viewDir, vec3 lightDir, vec3 halfDir, float roug
     float geo = geoSmith(viewIncidence, lightInsolation, roughness);
     geo = geo / (4.0 * viewIncidence * lightInsolation + 0.0001);
 #endif
-    
+
 #if PBR_GODOT_BRDF && !PBR_SHITTYBRDF
     geo = geoGGX(lightInsolation, viewIncidence, roughness);
 #endif
@@ -294,7 +294,7 @@ float BRDF(vec3 normalDir, vec3 viewDir, vec3 lightDir, vec3 halfDir, float roug
 #if PBR_GLTF2_BRDF && !PBR_HIGHPERF
     geo = geoSmithGLTF(normalDir, viewDir, lightDir, halfDir, roughness);
 #endif
-    
+
     return NDF * geo;
 }
 
@@ -345,67 +345,67 @@ vec3 OrenNayarNotrig(vec3 albedo, vec3 l, vec3 n, vec3 v, vec3 h, float lambert,
     // It is not based on any other shader. It is based on the original Oren-Nayar paper.
     //if (lambert <= 0.0) return vec3(0.0);
     //if (lambert <= 0.0) return vec3(0.0);
-    
+
     //float qj = 1.0;
     //float qq = PBR_OREN_NAYAR_INTERREFLECTION_STRENGTH + (1.0 - lambert)*0.75*(dot(l, v)*0.5+0.5);
     float qj = 0.0;
     float qq = PBR_OREN_NAYAR_INTERREFLECTION_STRENGTH;
-    
+
     // approximation of the stddev(slopes) to stddev(angles) conversion for values between 0 and 1
     r = r - r*r*0.33;
-    
+
     float r2 = r*r;
-    
+
     // big: polar
     // small: azimuthal
-    
+
     vec3 l_pn = normalize(reject(l, n)); // sqrts: 1
     vec3 v_pn = normalize(reject(v, n)); // sqrts: 2
     float cos_small_ir_delta = dot(l_pn, v_pn);
-    
+
     float cos_big_i = dot(l, n);
     float cos_big_r = dot(v, n);
     cos_big_r = abs(cos_big_r); // some fragment normals face "into" the screen
-    
+
     float cos_alpha = min(cos_big_r, cos_big_i);
     float cos_beta = max(cos_big_r, cos_big_i);
-    
+
     float sin_alpha = sqrt(1.0 - cos_alpha*cos_alpha); // sqrts: 3
     float sin_beta = sqrt(1.0 - cos_beta*cos_beta); // sqrts: 4
     float tan_beta = sin_beta/cos_beta;
-    
+
     //float beta_approx = (PI/2.0)*(1.0-cos_beta); // WORSE visual result than the following. for some reason.
     //float alpha_approx = (PI/2.0)*(1.0-cos_alpha); // WORSE visual result than the following. for some reason.
-    
+
     float beta_approx = (PI/2.0)-cos_beta; // lol. lmao. i mean it works, but...
     float alpha_approx = (PI/2.0)-cos_alpha; // lol. lmao i mean it works, but...
     // more accurate approximation, but seemingly visually identical in my tests to the above:
     //float beta_approx = (PI/2.0)-cos_beta-(cos_beta*cos_beta*cos_beta*(PI/6.0));
     //float alpha_approx = (PI/2.0)-cos_alpha-(cos_alpha*cos_alpha*cos_alpha*(PI/6.0));
-    
+
     float c1 = 1.0 - 0.5*(r2 / (r2 + 0.33));
-    
+
     float twobeta_over_pi = (2.0 * beta_approx / PI);
     float _adjust = (cos_small_ir_delta >= 0.0) ? 0.0 : twobeta_over_pi;
     float c2 = 0.45 * (r2/(r2+0.09)) * (sin_alpha - _adjust*_adjust*_adjust);
-    
+
     float _temp = 4.0 * alpha_approx * beta_approx / (PI*PI);
     float c3 = 0.125 * (r2/(r2+0.09)) * _temp*_temp;
-    
+
     float cos_avg_approx = (cos_beta + cos_alpha)*0.5;
     float sin_avg_approx = (sin_beta + sin_alpha)*0.5;
     float tan_avg_approx = sin_avg_approx / cos_avg_approx;
-    
+
     float l1 = lambert * (
         c1 +
         cos_small_ir_delta * c2 * tan_beta +
         (1.0 - abs(cos_small_ir_delta)) * c3 * tan_avg_approx +
         0.0)
     ;
-    
+
     // squaringness of albedo comes from how the output of this function is used (it's factored out)
     vec3 l2 = qq * mix(albedo, vec3(1.0), qj) * lambert * (r2/(r2+0.13)) * (1.0 - cos_small_ir_delta * twobeta_over_pi*twobeta_over_pi);
-    
+
     return min(vec3(1.0), (vec3(l1) + l2) * mix(1.0, PBR_DIFFUSE_OREN_NAYAR_ALBEDO_COMPENSATION, r));
     // four total sqrts
 }
@@ -413,11 +413,11 @@ vec3 OrenNayarNotrig(vec3 albedo, vec3 l, vec3 n, vec3 v, vec3 h, float lambert,
 vec3 OrenNayarApprox(vec3 albedo, vec3 lightDir, vec3 normalDir, vec3 viewDir, vec3 halfDir, float lightInsolation, float r)
 {
     if (lightInsolation < 0.0) return vec3(0.0);
-    
+
     // approximation of the stddev(slopes) to stddev(angles) conversion for values between 0 and 1
     r = r - r*r*0.33;
     float c1 = 0.625;
-    
+
     float fake_c2 = dot(reject(lightDir, normalDir), reject(viewDir, normalDir))*0.4;
     float fake_tan = 1.0/max(dot(halfDir, normalDir), 0.2);
     return vec3(mix(lightInsolation, lightInsolation * (
@@ -469,20 +469,20 @@ vec3 perLightPBR(float sss, float alpha, vec3 diffuseColor, vec3 diffuseVertexCo
 
     vec3 normalDir = normal;
     vec3 halfDir = normalize(viewDir + lightDir);
-    
+
     float lightInsolation = dot(normalDir, lightDir);
     float baseIncidence = lightInsolation;
-    
+
     // FIXME: what was this originally for?
     if (dot(lightColor, vec3(1.0)) < 0.0)
         ambientBias += lightColor * max(0.0, baseIncidence) * falloff;
-    
+
     ambientLightColor = max(ambientLightColor, vec3(0.0));
     lightColor = max(lightColor, vec3(0.0));
     falloff = max(falloff, 0.0);
-    
+
     light += diffuseColor * ambientColor * falloff * ao * ambientLightColor;
-    
+
 #if PBR_VERTEX_COLOR_HACK && DO_PBR
     // the main use of vertex colors in MW assets is as a GI approximation, so make it affect light instead of diffuse
     // (otherwise darkened areas get a weird haze)
@@ -520,7 +520,7 @@ vec3 perLightPBR(float sss, float alpha, vec3 diffuseColor, vec3 diffuseVertexCo
     vec3 fresnel = vec3(0.0);
     float specular = 0.0;
 #endif
-    
+
 #ifndef GROUNDCOVER
     baseIncidence = max(baseIncidence, 0.0);
 #else
@@ -553,7 +553,7 @@ vec3 perLightPBR(float sss, float alpha, vec3 diffuseColor, vec3 diffuseVertexCo
 
     if (baseIncidence == 0.0)
         return light;
-    
+
     float adjust = baseIncidence;
     #if PBR_EDGE_NORMAL_HACK
         // reduce specularity by incidence against plane normal to conserve energy
@@ -563,7 +563,7 @@ vec3 perLightPBR(float sss, float alpha, vec3 diffuseColor, vec3 diffuseVertexCo
 
 #if DO_PBR
     vec3 lambert = vec3(baseIncidence * (falloff * (1.0/PI)));
-    
+
     #if PBR_DIFFUSE_BURLEY || PBR_DIFFUSE_BURLEY_APPROX
     lambert = vec3(Burley(lightDir, normalDir, viewDir, halfDir, baseIncidence, roughness) * (falloff * (1.0/PI)));
     #endif
@@ -581,12 +581,12 @@ vec3 perLightPBR(float sss, float alpha, vec3 diffuseColor, vec3 diffuseVertexCo
     #if PBR_DIFFUSE_CELSHADE
         lambert = vec3(min(1.0, baseIncidence*64.0) * (falloff * (1.0/PI)));
     #endif
-    
+
     vec3 diff = diffuseColor * lambert  * (lightColor * shadowing) * (1.0 - fresnel) * (1.0 - metallicity);
     vec3 spec = vec3(1.0)    * specular * (lightColor * shadowing) * fresnel;
     // the specular term was already divided by pi in the BRDF function (distGGX specifically)
     // likewise, metallicity was taken into account when calculating the f0 component for specularity
-    
+
     if (radius >= 0.0) // point light
         spec *= falloff;
     else // sun
@@ -623,20 +623,20 @@ vec3 ambientGuess(float height, vec3 ambientTerm, float roughness)
 vec3 perAmbientPBR(vec3 diffuseColor, vec3 ambientColor, vec3 ambientBias, vec3 ambientAdjust, float ao, float metallicity, float roughness, vec3 normal, vec3 viewDir, vec3 f0, vec3 f90)
 {
     vec3 light = vec3(0.0);
-    
+
     vec3 origAmbientTerm = max(ambientColor + ambientBias, vec3(0.0));
-    
+
     vec3 reflection = reflect(-viewDir, normal);
     vec3 reflectionWorld = (osg_ViewMatrixInverse * vec4(reflection, 0.0)).xyz;
     vec3 ambientTerm = origAmbientTerm;
-    
+
     vec3 ambientDiffuseTerm = ambientTerm;
-    
+
 #if PBR_ENV_AMBIENT
     vec3 nworld = (osg_ViewMatrixInverse * vec4(normal, 0.0)).xyz;
     ambientDiffuseTerm = ambientGuess(nworld.z, ambientDiffuseTerm, 0.7);
 #endif
-    
+
 #if !PBR_SPECULAR_AMBIENT || !DO_PBR
     light += diffuseColor * ambientAdjust * ambientDiffuseTerm * ao * (1.0 - metallicity);
 #endif
@@ -644,7 +644,7 @@ vec3 perAmbientPBR(vec3 diffuseColor, vec3 ambientColor, vec3 ambientBias, vec3 
 #if DO_PBR
     vec3 ambientTermOrig = ambientTerm;
     ambientTerm = ambientGuess(reflectionWorld.z, ambientTerm, roughness);
-    
+
     // FIXME: HACK: evil, physically meaningless: ambient metallic specularity guesstimate
     // HERE BE DRAGONS
 #if !PBR_SPECULAR_AMBIENT
@@ -660,38 +660,38 @@ vec3 perAmbientPBR(vec3 diffuseColor, vec3 ambientColor, vec3 ambientBias, vec3 
             // so, make the fake horizon only happen if we don't think this is the inventory character preview
             ambientTerm = origAmbientTerm;
         }
-        
+
         float vdot = max(dot(normal, viewDir), 0.0);
         float inv_roughness = 1.0 - roughness;
         float inv_roughness_2 = inv_roughness*inv_roughness;
-        
+
         #if !PBR_NO_AMBIENT_ENV_GUESS
         // extremely awful terible estimation of the environmental BRDF, non-hacky seen here:
         // https://google.github.io/filament/Filament.md.html#toc5.3.4.3
         // https://learnopengl.com/PBR/IBL/Specular-IBL
         // red is f0, green is f90
-        
+
         float inv_vdot = max(0.0, 1.0 - vdot*2.0);
         float bad_dfg = inv_roughness_2 * (inv_vdot * inv_vdot);
         float f90_part = bad_dfg;
         float f0_part = mix((1.0 - bad_dfg), 0.5, roughness);
-        
+
         #else
         float inv_vdot = 1.0 - vdot;
         float bad_dfg = inv_roughness_2 * (inv_vdot * inv_vdot);
         float f90_part = bad_dfg * bad_dfg;
         float f0_part = (1.0 - f90_part)*0.8;
         #endif
-        
+
 #if PBR_METAL_F90_DARKENING_HACK
         f90 *= sqrt(diffuseColor) * 0.8 + 0.2;
 #endif
-        
+
         light += ambientAdjust * ambientTerm * ao * (f0*f0_part + f90*f90_part) * metallicity;
-        
+
 #if PBR_SPECULAR_AMBIENT
         light += diffuseColor * ambientAdjust * ambientDiffuseTerm * ao * (1.0 - metallicity) * f0_part;
-        
+
         light += ambientAdjust * ambientTerm * ao * (1.0 - metallicity) * f90_part * LIGHT_STRENGTH_POINT_SPECULAR;
 #endif
     }
@@ -713,10 +713,9 @@ vec3 doLightingPBR(vec2 screenCoord, float alpha,
     #if DEBUG_SHOW_METALLICITY
         return vec3(metallicity);
     #endif
-    
+
 #if NO_LIGHTING
 #if NO_LIGHTING_HASH_PBR
-    //if ((int(screenCoord.x + screenCoord.y) & 1) == 0)
     if (int((screenCoord.x + screenCoord.y) / 2) == int((screenCoord.x + screenCoord.y + 1) / 2))
     {
         sss = 1.0;
@@ -724,11 +723,11 @@ vec3 doLightingPBR(vec2 screenCoord, float alpha,
         int si = int(round(sss * 15.0));
         int msi = mi * 16 + 15;
         metallicity = float(msi) / 255.0;
-        
+
         normal.r = metallicity * 2.0 - 1.0;
         normal.g = roughness * 2.0 - 1.0;
-        int aoi = int(round(ao * 15.0));
-        int shi = int(round(_shadowing * 15.0));
+        int aoi = int(ao * 15);
+        int shi = int(_shadowing * 15);
         int aoishi = aoi * 16 + shi;
         ao = float(aoishi) / 255.0;
         normal.b = ao * 2.0 - 1.0;
@@ -743,12 +742,12 @@ vec3 doLightingPBR(vec2 screenCoord, float alpha,
     return diffuseColor * diffuseVertexColor;
 #endif
     //sss *= 1.0 - metallicity; // trust the asset author, for now.
-    
+
 #if !DO_PBR
     metallicity = 0.0;
     ao = 1.0;
 #endif
-    
+
     diffuseColor = p_to_linear(diffuseColor);
 #if PBR_VERTEX_COLOR_HACK_ALT && DO_PBR
     vec3 oldVC = diffuseVertexColor;
@@ -758,33 +757,33 @@ vec3 doLightingPBR(vec2 screenCoord, float alpha,
     diffuseVertexColor = p_to_linear(diffuseVertexColor);
     ambientColor = p_to_linear(ambientColor);
     emissiveColor = p_to_linear(emissiveColor);
-    
+
     vec3 viewDir = -normalize(viewPos);
-    
+
     vec3 sd = sun.diffuse.xyz;
     vec3 sunColor = p_to_linear(sd * LIGHT_STRENGTH_SUN);
     vec3 ambientAdjust = p_to_linear(sun.ambient.xyz * LIGHT_STRENGTH_AMBIENT);
-    
+
     // indoors detection hack
     vec3 sunvec = normalize(sun.position.xyz);
     bool indoors = (osg_ViewMatrixInverse * vec4(sunvec, 0.0)).y > 0.0;
-    
+
     vec3 f90 = vec3(1.0) + specularTint;
     vec3 f0 = vec3(f0_scalar) * f90;
-    
+
     // should be:
     //f0 = mix(f0, max(f0, diffuseColor), metallicity);
     // but game engines (including godot) usually do:
     //f0 = mix(f0, diffuseColor, metallicity);
     // compromise:
     f0 = mix(f0, max(vec3(0.01), diffuseColor), metallicity);
-    
+
     vec3 ambientBias = vec3(0.0);
-    
+
     vec3 shadowing = vec3(_shadowing);
     //shadowing.r = pow(shadowing.r, 0.7);
     vec3 olight = vec3(0.0);
-    
+
     olight += perLightPBR(
         sss, alpha, diffuseColor, diffuseVertexColor, ambientColor, shadowing, normal, viewDir,
         sunvec,
@@ -809,11 +808,11 @@ vec3 doLightingPBR(vec2 screenCoord, float alpha,
             lcalcRadius(i)
         );
 #endif
-        
+
         vec3 lightPos = light.position.xyz - viewPos;
         float lightDistance = length(lightPos);
         float radius = light.radius;
-        
+
         vec3 lightDir = normalize(lightPos);
 // groundcover is too expensive to give the boosted cutoff
 #if DO_PBR
@@ -834,10 +833,10 @@ vec3 doLightingPBR(vec2 screenCoord, float alpha,
 #endif
         cutoff = 1.0 - fade((lightDistance / radius - 0.75) / 0.25);
         cutoff *= clusterFade(viewPos, radius);
-        
+
         if (cutoff == 0.0)
             continue;
-            
+
         //float legacy_falloff = calcAttenuation(light, lightDistance);
         float legacy_falloff = 1.0 / (
             light.constant +
@@ -845,7 +844,7 @@ vec3 doLightingPBR(vec2 screenCoord, float alpha,
             light.quadratic * lightDistance * lightDistance
         );
         float standard_falloff = calcAttenuation(light, PBR_FALLOFF_REF_DISTANCE);
-        
+
 #if DO_PBR && PBR_FORCE_QUADRATIC_FALLOFF
         //float physical_falloff = 1.0/(PBR_FALLOFF_REF_DISTANCE*PBR_FALLOFF_REF_DISTANCE);
         float constant_part = PBR_FORCE_QUADRATIC_FALLOFF_CONSTANT*PBR_FORCE_QUADRATIC_FALLOFF_CONSTANT;
@@ -865,18 +864,18 @@ vec3 doLightingPBR(vec2 screenCoord, float alpha,
 #endif
 
         falloff *= cutoff;
-        
+
         vec3 ambient = light.ambient.xyz;
         vec3 diffuse = light.diffuse.xyz;
-        
+
         ambient = p_to_linear(ambient);
         vec3 lightColor = p_to_linear(diffuse * LIGHT_STRENGTH_POINT);
-        
+
         olight += perLightPBR(sss, alpha, diffuseColor, diffuseVertexColor, ambientColor, vec3(1.0), normal, viewDir, lightDir, lightDistance, abs(radius) + 0.0001, falloff, cutoff, ambient, lightColor, metallicity, roughness, ao, f0, f90, indoors, ambientBias);
     }
-    
+
     olight += perAmbientPBR(diffuseColor, ambientColor, ambientBias, ambientAdjust, ao, metallicity, roughness, normal, viewDir, f0, f90);
-    
+
     return to_srgb(olight);
 }
 
@@ -905,7 +904,7 @@ void fakePbrEstimate(inout vec3 color, out float metallicity, out float roughnes
 void specMapToPBR(vec4 specTex, out float metallicity, out float roughness, out float ao, out float sss, out float f0_scalar)
 {
     metallicity = specTex.r;
-    
+
     #if PBR_MAT_ROUGHNESS_INVERTED
         roughness = 1.0 - specTex.g;
     #else
@@ -913,7 +912,7 @@ void specMapToPBR(vec4 specTex, out float metallicity, out float roughness, out 
     #endif
     roughness *= roughness;
     roughness = max(roughness, PBR_MAT_ROUGHNESS_FLOOR);
-    
+
     #if DO_PBR
         ao = specTex.b;
         #if PBR_IM_USING_BROKEN_AO_MAPS_PLS_TRASH_THEM_KTHX
@@ -922,9 +921,9 @@ void specMapToPBR(vec4 specTex, out float metallicity, out float roughness, out 
     #else
         ao = 1.0;
     #endif
-    
+
     sss = 1.0 - specTex.a;
-    
+
     f0_scalar = 0.04;
 }
 

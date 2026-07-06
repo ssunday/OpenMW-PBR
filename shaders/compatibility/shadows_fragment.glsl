@@ -4,8 +4,6 @@
 
 uniform float osg_simulationTime;
 
-#extension GL_EXT_gpu_shader4: require
-
 #if SHADOWS
     uniform float maximumShadowMapDistance;
     uniform float shadowFadeStart;
