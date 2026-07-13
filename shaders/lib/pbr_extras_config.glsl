@@ -6,13 +6,12 @@
 #define PBR_POM_DISABLE_ON_OBJECTS 0
 #define PBR_POM_GRAD 0 // if you needed to set PBR_POM_NO_TEXTURELOD to 1, you probably need to set this to 0
 #define PBR_POM_SHADOW 1
-#define POM_MODE 10
 #define PBR_POM_SHADDOW_ARTIFACT_BODGE 4 // from 0 to 10
 // ONLY IF you set PBR_POM_SHADDOW_ARTIFACT_BODGE to 0 for some reason:
 //    you may want to use in settings.cfg [Shadows] to prevent some false shadowing:
 //    use front face culling = true
 
-#define PBR_SELF_SHADOW 0
+#define PBR_SELF_SHADOW 1
 
 // set to your shadowmap resolution
 #define PBR_SHADOWMAP_RES (2048.0)
