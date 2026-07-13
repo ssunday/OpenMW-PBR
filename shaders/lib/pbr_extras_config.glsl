@@ -1,10 +1,10 @@
 #ifndef LIB_PBR_CONFIG_EXTRAS
 #define LIB_PBR_CONFIG_EXTRAS
 
-#define PBR_POM 0
-#define PBR_POM_NO_TEXTURELOD 0 // improves driver compatibility, but causes visual glitches. keep to 0 unless absolutely necessary
+#define PBR_POM 1
+#define PBR_POM_NO_TEXTURELOD 1 // improves driver compatibility, but causes visual glitches. keep to 0 unless absolutely necessary
 #define PBR_POM_DISABLE_ON_OBJECTS 0
-#define PBR_POM_GRAD 1 // if you needed to set PBR_POM_NO_TEXTURELOD to 1, you probably need to set this to 0
+#define PBR_POM_GRAD 0 // if you needed to set PBR_POM_NO_TEXTURELOD to 1, you probably need to set this to 0
 #define PBR_POM_SHADOW 1
 #define POM_MODE 10
 #define PBR_POM_SHADDOW_ARTIFACT_BODGE 4 // from 0 to 10
